@@ -40,13 +40,13 @@ func updateEvent(context *gin.Context) {
 func getEvent(context *gin.Context) {
 	id, err := strconv.ParseInt(context.Param("id"), 10, 64)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
 		return
 	}
 
 	event, err := models.GetEventByID(id)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
 		return
 	}
 
@@ -56,7 +56,7 @@ func getEvent(context *gin.Context) {
 func getEvents(context *gin.Context) {
 	events, err := models.GetAllEvents()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch events."})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find events."})
 		return
 	}
 	context.JSON(http.StatusOK, events)
@@ -78,4 +78,26 @@ func createEvent(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusCreated, gin.H{"message": "Event created successfully."})
+}
+
+func deleteEvent(context *gin.Context) {
+	id, err := strconv.ParseInt(context.Param("id"), 10, 64)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
+		return
+	}
+
+	event, err := models.GetEventByID(id)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
+		return
+	}
+
+	err = event.Delete()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not delete event."})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"message": "Event deleted successfully."})
 }
