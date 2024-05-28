@@ -1,6 +1,9 @@
 package models
 
-import "github.com/frevent/db"
+import (
+	"github.com/frevent/db"
+	"github.com/frevent/utils"
+)
 
 type User struct {
 	ID       int64
@@ -19,7 +22,13 @@ func (u *User) Save() error {
 		return err
 	}
 	defer preparedSaveQuery.Close()
-	result, err := preparedSaveQuery.Exec(u.Email, u.Password)
+
+	hashedPassword, err := utils.HashPassword(u.Password)
+	if err != nil {
+		return err
+	}
+
+	result, err := preparedSaveQuery.Exec(u.Email, hashedPassword)
 	if err != nil {
 		return err
 	}
