@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/frevent/db"
 	"github.com/frevent/utils"
 )
@@ -35,4 +37,23 @@ func (u *User) Save() error {
 	id, err := result.LastInsertId()
 	u.ID = id
 	return err
+}
+
+func (u *User) ValidatePassword() error {
+	emailQuery := `SELECT id, password FROM users WHERE email = ?`
+	row := db.DB.QueryRow(emailQuery, u.Email)
+
+	var hashedPassword string
+	err := row.Scan(&u.ID, &hashedPassword)
+	if err != nil {
+		return err
+	}
+
+	isPasswordValid := utils.IsPasswordValid(u.Password, hashedPassword)
+
+	if !isPasswordValid {
+		return errors.New("invalid credentials")
+	}
+
+	return nil
 }
