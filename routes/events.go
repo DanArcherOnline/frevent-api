@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/frevent/models"
+	"github.com/frevent/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -63,8 +64,21 @@ func getEvents(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
+	token := context.Request.Header.Get("Authorization")
+
+	if token == "" {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action1."})
+		return
+	}
+
+	err := utils.VerifyToken(token)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action2."})
+		return
+	}
+
 	var event models.Event
-	err := context.ShouldBindJSON(&event)
+	err = context.ShouldBindJSON(&event)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not create event due to incorrect data."})
 		return
