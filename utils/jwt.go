@@ -20,7 +20,7 @@ func GenerateToken(userId int64, email string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-func VerifyToken(token string) error {
+func VerifyToken(token string) (*jwt.Token, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		if !isHMACALgorithm(token) {
 			return nil, errors.New("unexpected signing method")
@@ -29,13 +29,26 @@ func VerifyToken(token string) error {
 	})
 
 	if err != nil || !parsedToken.Valid {
-		return errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
-	return nil
+	return parsedToken, nil
 }
 
 func isHMACALgorithm(token *jwt.Token) bool {
 	_, ok := token.Method.(*jwt.SigningMethodHMAC)
 	return ok
+}
+
+func GetUserIDFromToken(token *jwt.Token) (int64, error) {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, errors.New("unexpected claims type")
+	}
+	userID, ok := claims["userId"].(float64)
+	if !ok {
+		return 0, errors.New("type assertion failed")
+	}
+	userID64 := int64(userID)
+	return userID64, nil
 }

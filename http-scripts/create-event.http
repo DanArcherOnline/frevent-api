@@ -1,10 +1,10 @@
 POST http://localhost:8080/events
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1lQG1lLmNvbSIsImV4cCI6MTcxNjk5MzEyOCwidXNlcklkIjozfQ.N7aOkBJuhZLJQHFZpT82__9E3CpUXD462dkl5XMb3iQ
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InlvdUB5b3UuY29tIiwiZXhwIjoxNzE3MDg4Nzk3LCJ1c2VySWQiOjR9.D2-Z4cwzNlGJFqTU4ogwYP3LrsF12t0nWGKosTj33ag
 
 {
-    "name":"Test Name 2",
-    "description":"Test Description",
+    "name":"Delete Me",
+    "description":"Another Test Description",
     "location":"Location",
     "dateTime":"2023-11-29T07:00:00.000Z"
 }

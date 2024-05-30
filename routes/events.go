@@ -1,12 +1,14 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/frevent/models"
 	"github.com/frevent/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func updateEvent(context *gin.Context) {
@@ -16,9 +18,19 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
-	_, err = models.GetEventByID(id)
+	event, err := models.GetEventByID(id)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
+		return
+	}
+
+	userID, err := getUserIDFromToken(context)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not update event due to incorrect data."})
+		return
+	}
+	if event.UserID != userID {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action."})
 		return
 	}
 
@@ -36,6 +48,20 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, gin.H{"message": "Event updated successfully."})
+}
+
+func getUserIDFromToken(context *gin.Context) (int64, error) {
+	verifiedToken, ok := context.Get("token")
+	if !ok {
+		return 0, errors.New("could not find token in context")
+	}
+
+	userID, err := utils.GetUserIDFromToken(verifiedToken.(*jwt.Token))
+	if err != nil {
+		return 0, err
+	}
+
+	return userID, nil
 }
 
 func getEvent(context *gin.Context) {
@@ -64,16 +90,14 @@ func getEvents(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
-	token := context.Request.Header.Get("Authorization")
-
-	if token == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action1."})
-		return
+	verifiedToken, ok := context.Get("token")
+	if !ok {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Coud not create event."})
 	}
 
-	err := utils.VerifyToken(token)
+	userID, err := utils.GetUserIDFromToken(verifiedToken.(*jwt.Token))
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action2."})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not create event due to invalid token."})
 		return
 	}
 
@@ -84,8 +108,7 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
-	event.ID = 1
-	event.UserID = 1
+	event.UserID = userID
 	err = event.Save()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Coud not create event."})
@@ -104,6 +127,16 @@ func deleteEvent(context *gin.Context) {
 	event, err := models.GetEventByID(id)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not find event."})
+		return
+	}
+
+	userID, err := getUserIDFromToken(context)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not update event due to incorrect data."})
+		return
+	}
+	if event.UserID != userID {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized action."})
 		return
 	}
 
